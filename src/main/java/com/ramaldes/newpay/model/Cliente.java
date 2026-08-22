@@ -1,9 +1,6 @@
 package com.ramaldes.newpay.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
@@ -19,6 +16,9 @@ public class Cliente {
     private String cpf;
     private String email;
     private LocalDate dataNascimento;
+
+    @OneToOne(mappedBy = "cliente")
+    private Conta conta;
 
     public Cliente() {}
 
@@ -63,6 +63,14 @@ public class Cliente {
 
     public void setDataNascimento(LocalDate dataNascimento) {
          this.dataNascimento = dataNascimento;
+    }
+
+    public Conta getConta() {
+        return conta;
+    }
+
+    public void setConta(Conta conta) {
+        this.conta = conta;
     }
 
 }
