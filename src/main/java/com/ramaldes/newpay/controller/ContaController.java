@@ -1,11 +1,13 @@
 package com.ramaldes.newpay.controller;
 
 import com.ramaldes.newpay.dto.ContaResponseDTO;
+import com.ramaldes.newpay.dto.DepositoRequestDTO;
+import com.ramaldes.newpay.model.Conta;
 import com.ramaldes.newpay.service.ContaService;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1")
@@ -20,5 +22,15 @@ public class ContaController {
     @PostMapping("/contas/{clienteId}")
     public ContaResponseDTO abrirConta(@PathVariable Long clienteId){
         return contaService.abrirConta(clienteId);
+    }
+
+    @PostMapping("/contas/{contaId}/depositos")
+    public ContaResponseDTO depositar(@PathVariable Long contaId, @Valid @RequestBody DepositoRequestDTO dto){
+        return contaService.depositar(contaId, dto);
+    }
+
+    @GetMapping("/contas")
+    public List<ContaResponseDTO> listarContas() {
+        return contaService.listarContas();
     }
 }

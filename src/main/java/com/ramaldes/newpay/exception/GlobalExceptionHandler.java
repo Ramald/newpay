@@ -27,4 +27,9 @@ public class GlobalExceptionHandler  {
     public ResponseEntity<String> TratarContaJaExiste(ContaJaExisteException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
     }
+
+    @ExceptionHandler(ContaNaoEncontradaException.class)
+    public ResponseEntity<String> TratarContaNaoEncontrada(ContaNaoEncontradaException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+    }
 }

@@ -1,8 +1,11 @@
 package com.ramaldes.newpay.service;
 
+import com.ramaldes.newpay.dto.ClienteResponseDTO;
 import com.ramaldes.newpay.dto.ContaResponseDTO;
+import com.ramaldes.newpay.dto.DepositoRequestDTO;
 import com.ramaldes.newpay.exception.ClienteNaoEncontradoException;
 import com.ramaldes.newpay.exception.ContaJaExisteException;
+import com.ramaldes.newpay.exception.ContaNaoEncontradaException;
 import com.ramaldes.newpay.model.Cliente;
 import com.ramaldes.newpay.model.Conta;
 import com.ramaldes.newpay.repository.ClienteRepository;
@@ -10,6 +13,8 @@ import com.ramaldes.newpay.repository.ContaRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -55,6 +60,47 @@ public class ContaService {
                 );
 
         return response;
+    }
+
+    public ContaResponseDTO depositar(Long contaId, DepositoRequestDTO dto) {
+        Optional<Conta> buscarConta = contaRepository.findById(contaId);
+
+        if(buscarConta.isEmpty()) {
+            throw new ContaNaoEncontradaException("CONTA NÃO ENCONTRADA");
+        }
+
+        Conta contaEncontrada = buscarConta.get();
+
+        BigDecimal novoSaldo = contaEncontrada.getSaldo().add(dto.getValor());
+
+        contaEncontrada.setSaldo(novoSaldo);
+
+        Conta contaAtualizada = contaRepository.save(contaEncontrada);
+
+        ContaResponseDTO response = new ContaResponseDTO(
+                contaAtualizada.getId(),
+                contaAtualizada.getNumeroConta(),
+                contaAtualizada.getSaldo(),
+                contaAtualizada.getCliente().getId()
+        );
+
+        return response;
+    }
+
+    public List<ContaResponseDTO> listarContas() {
+        List<Conta> buscarConta = contaRepository.findAll();
+        List<ContaResponseDTO> resposta = new ArrayList<>();
+
+        for(Conta percorrido : buscarConta) {
+            ContaResponseDTO dto = new ContaResponseDTO(
+                    percorrido.getId(),
+                    percorrido.getNumeroConta(),
+                    percorrido.getSaldo(),
+                    percorrido.getCliente().getId());
+            resposta.add(dto);
+        }
+
+        return resposta;
     }
 
 }
