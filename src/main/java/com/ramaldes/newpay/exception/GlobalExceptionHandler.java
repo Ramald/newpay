@@ -22,4 +22,9 @@ public class GlobalExceptionHandler  {
     public ResponseEntity<String> TratarClienteNaoEncontrado(ClienteNaoEncontradoException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
     }
+
+    @ExceptionHandler(ContaJaExisteException.class)
+    public ResponseEntity<String> TratarContaJaExiste(ContaJaExisteException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
+    }
 }
