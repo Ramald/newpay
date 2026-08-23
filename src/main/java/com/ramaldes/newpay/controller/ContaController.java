@@ -1,7 +1,6 @@
 package com.ramaldes.newpay.controller;
 
-import com.ramaldes.newpay.dto.ContaResponseDTO;
-import com.ramaldes.newpay.dto.DepositoRequestDTO;
+import com.ramaldes.newpay.dto.*;
 import com.ramaldes.newpay.model.Conta;
 import com.ramaldes.newpay.service.ContaService;
 import jakarta.validation.Valid;
@@ -32,5 +31,15 @@ public class ContaController {
     @GetMapping("/contas")
     public List<ContaResponseDTO> listarContas() {
         return contaService.listarContas();
+    }
+
+    @PostMapping("/contas/{contaId}/saques")
+    public ContaResponseDTO sacar(@PathVariable Long contaId, @Valid @RequestBody SaqueRequestDTO dto) {
+        return contaService.sacar(contaId, dto);
+    }
+
+    @PostMapping("/contas/transferencias")
+    public TransferenciaResponseDTO transferencia(@Valid @RequestBody TransferenciaRequestDTO dto) {
+        return contaService.transferencia(dto);
     }
 }

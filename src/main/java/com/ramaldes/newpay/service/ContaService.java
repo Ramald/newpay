@@ -1,16 +1,13 @@
 package com.ramaldes.newpay.service;
 
-import com.ramaldes.newpay.dto.ClienteResponseDTO;
-import com.ramaldes.newpay.dto.ContaResponseDTO;
-import com.ramaldes.newpay.dto.DepositoRequestDTO;
-import com.ramaldes.newpay.exception.ClienteNaoEncontradoException;
-import com.ramaldes.newpay.exception.ContaJaExisteException;
-import com.ramaldes.newpay.exception.ContaNaoEncontradaException;
+import com.ramaldes.newpay.dto.*;
+import com.ramaldes.newpay.exception.*;
 import com.ramaldes.newpay.model.Cliente;
 import com.ramaldes.newpay.model.Conta;
 import com.ramaldes.newpay.repository.ClienteRepository;
 import com.ramaldes.newpay.repository.ContaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -101,6 +98,83 @@ public class ContaService {
         }
 
         return resposta;
+    }
+
+    public ContaResponseDTO sacar(Long contaId, SaqueRequestDTO dto) {
+        Optional<Conta> buscarConta = contaRepository.findById(contaId);
+
+        if(buscarConta.isEmpty()) {
+            throw new ContaNaoEncontradaException("CONTA NÃO ENCONTRADA");
+        }
+
+        Conta contaEncontrada = buscarConta.get();
+
+        int comparacao = contaEncontrada.getSaldo().compareTo(dto.getValor());
+        if(comparacao < 0) {
+            throw new SaldoInsuficienteException("SALDO INSUFICIENTE.");
+        }
+
+        BigDecimal novoSaldo = contaEncontrada.getSaldo().subtract(dto.getValor());
+
+        contaEncontrada.setSaldo(novoSaldo);
+
+        Conta contaAtualizada = contaRepository.save(contaEncontrada);
+
+        ContaResponseDTO response = new ContaResponseDTO(
+                contaAtualizada.getId(),
+                contaAtualizada.getNumeroConta(),
+                contaAtualizada.getSaldo(),
+                contaAtualizada.getCliente().getId()
+        );
+
+        return response;
+    }
+
+    @Transactional
+    public TransferenciaResponseDTO transferencia(TransferenciaRequestDTO dto) {
+
+        if(dto.getContaOrigemId().equals(dto.getContaDestinoId())) {
+            throw new ContaOrigemEDestinoIguais("A CONTA DE ORIGEM E DESTINO NÃO PODEM SER A MESMA");
+        }
+
+        Optional<Conta> buscarContaOrigem = contaRepository.findById(dto.getContaOrigemId());
+        Optional<Conta> buscarContaDestino = contaRepository.findById(dto.getContaDestinoId());
+
+        if(buscarContaOrigem.isEmpty()) {
+            throw new ContaNaoEncontradaException("CONTA NÃO ENCONTRADA!");
+        }
+
+        if(buscarContaDestino.isEmpty()) {
+            throw new ContaNaoEncontradaException("CONTA NÃO ENCONTRADA!");
+        }
+
+        Conta contaOrigem = buscarContaOrigem.get();
+        Conta contaDestino = buscarContaDestino.get();
+
+        int comparacao = contaOrigem.getSaldo().compareTo(dto.getValor());
+        if(comparacao < 0) {
+            throw new SaldoInsuficienteException("SALDO INSUFICIENTE!");
+        }
+
+        BigDecimal novoSaldoOrigem = contaOrigem.getSaldo().subtract(dto.getValor());
+        BigDecimal novoSaldoDestino = contaDestino.getSaldo().add(dto.getValor());
+
+        contaOrigem.setSaldo(novoSaldoOrigem);
+        contaDestino.setSaldo(novoSaldoDestino);
+
+        Conta contaOrigemAtualizada = contaRepository.save(contaOrigem);
+        Conta contaDestinoAtualizada = contaRepository.save(contaDestino);
+
+        TransferenciaResponseDTO response = new TransferenciaResponseDTO(
+                contaOrigemAtualizada.getId(),
+                contaDestinoAtualizada.getId(),
+                dto.getValor(),
+                contaOrigemAtualizada.getSaldo(),
+                contaDestinoAtualizada.getSaldo()
+        );
+
+        return response;
+
     }
 
 }

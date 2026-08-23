@@ -32,4 +32,14 @@ public class GlobalExceptionHandler  {
     public ResponseEntity<String> TratarContaNaoEncontrada(ContaNaoEncontradaException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
     }
+
+    @ExceptionHandler(SaldoInsuficienteException.class)
+    public ResponseEntity<String> TratarSaldoInsuficiente(SaldoInsuficienteException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(ContaOrigemEDestinoIguais.class)
+    public ResponseEntity<String> TratarContaOrigemEDestinoIguais(ContaOrigemEDestinoIguais exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+    }
 }
