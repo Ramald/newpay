@@ -4,12 +4,16 @@ import com.ramaldes.newpay.dto.*;
 import com.ramaldes.newpay.exception.*;
 import com.ramaldes.newpay.model.Cliente;
 import com.ramaldes.newpay.model.Conta;
+import com.ramaldes.newpay.model.Movimentacao;
+import com.ramaldes.newpay.model.TipoOperacao;
 import com.ramaldes.newpay.repository.ClienteRepository;
 import com.ramaldes.newpay.repository.ContaRepository;
+import com.ramaldes.newpay.repository.MovimentacaoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -19,10 +23,12 @@ public class ContaService {
 
     private final ContaRepository contaRepository;
     private final ClienteRepository clienteRepository;
+    private final MovimentacaoRepository movimentacaoRepository;
 
-    public ContaService(ContaRepository contaRepository, ClienteRepository clienteRepository) {
+    public ContaService(ContaRepository contaRepository, ClienteRepository clienteRepository, MovimentacaoRepository movimentacaoRepository) {
         this.contaRepository = contaRepository;
         this.clienteRepository = clienteRepository;
+        this.movimentacaoRepository = movimentacaoRepository;
     }
 
     public ContaResponseDTO abrirConta(Long clienteId) {
@@ -59,6 +65,7 @@ public class ContaService {
         return response;
     }
 
+    @Transactional
     public ContaResponseDTO depositar(Long contaId, DepositoRequestDTO dto) {
         Optional<Conta> buscarConta = contaRepository.findById(contaId);
 
@@ -73,6 +80,14 @@ public class ContaService {
         contaEncontrada.setSaldo(novoSaldo);
 
         Conta contaAtualizada = contaRepository.save(contaEncontrada);
+
+        Movimentacao movimentacao = new Movimentacao(
+                TipoOperacao.DEPOSITO,
+                dto.getValor(),
+                LocalDateTime.now(),
+                contaAtualizada
+        );
+        movimentacaoRepository.save(movimentacao);
 
         ContaResponseDTO response = new ContaResponseDTO(
                 contaAtualizada.getId(),
@@ -100,6 +115,7 @@ public class ContaService {
         return resposta;
     }
 
+    @Transactional
     public ContaResponseDTO sacar(Long contaId, SaqueRequestDTO dto) {
         Optional<Conta> buscarConta = contaRepository.findById(contaId);
 
@@ -119,6 +135,14 @@ public class ContaService {
         contaEncontrada.setSaldo(novoSaldo);
 
         Conta contaAtualizada = contaRepository.save(contaEncontrada);
+
+        Movimentacao movimentacao = new Movimentacao(
+                TipoOperacao.SAQUE,
+                dto.getValor(),
+                LocalDateTime.now(),
+                contaAtualizada
+        );
+        movimentacaoRepository.save(movimentacao);
 
         ContaResponseDTO response = new ContaResponseDTO(
                 contaAtualizada.getId(),
@@ -164,6 +188,24 @@ public class ContaService {
 
         Conta contaOrigemAtualizada = contaRepository.save(contaOrigem);
         Conta contaDestinoAtualizada = contaRepository.save(contaDestino);
+
+        LocalDateTime dataHoraTransferencia = LocalDateTime.now();
+        Movimentacao movimentacaoSaida = new Movimentacao(
+                TipoOperacao.TRANSFERENCIA_SAIDA,
+                dto.getValor(),
+                dataHoraTransferencia,
+                contaOrigemAtualizada
+        );
+        movimentacaoRepository.save(movimentacaoSaida);
+
+        Movimentacao movimentacaoEntrada = new Movimentacao(
+                TipoOperacao.TRANSFERENCIA_ENTRADA,
+                dto.getValor(),
+                dataHoraTransferencia,
+                contaDestinoAtualizada
+        );
+        movimentacaoRepository.save(movimentacaoEntrada);
+
 
         TransferenciaResponseDTO response = new TransferenciaResponseDTO(
                 contaOrigemAtualizada.getId(),
