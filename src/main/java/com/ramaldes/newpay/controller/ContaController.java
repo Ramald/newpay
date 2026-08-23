@@ -18,6 +18,18 @@ public class ContaController {
         this.contaService = contaService;
     }
 
+
+
+    @GetMapping("/contas")
+    public List<ContaResponseDTO> listarContas() {
+        return contaService.listarContas();
+    }
+
+    @GetMapping("/contas/{contaId}/extrato")
+    public List<ExtratoResponseDTO> extrato(@PathVariable Long contaId) {
+        return contaService.extrato(contaId);
+    }
+
     @PostMapping("/contas/{clienteId}")
     public ContaResponseDTO abrirConta(@PathVariable Long clienteId){
         return contaService.abrirConta(clienteId);
@@ -26,11 +38,6 @@ public class ContaController {
     @PostMapping("/contas/{contaId}/depositos")
     public ContaResponseDTO depositar(@PathVariable Long contaId, @Valid @RequestBody DepositoRequestDTO dto){
         return contaService.depositar(contaId, dto);
-    }
-
-    @GetMapping("/contas")
-    public List<ContaResponseDTO> listarContas() {
-        return contaService.listarContas();
     }
 
     @PostMapping("/contas/{contaId}/saques")
@@ -42,4 +49,5 @@ public class ContaController {
     public TransferenciaResponseDTO transferencia(@Valid @RequestBody TransferenciaRequestDTO dto) {
         return contaService.transferencia(dto);
     }
+
 }

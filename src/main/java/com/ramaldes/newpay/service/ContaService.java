@@ -219,4 +219,26 @@ public class ContaService {
 
     }
 
+    public List<ExtratoResponseDTO> extrato(Long contaId) {
+        Optional<Conta> buscarConta = contaRepository.findById(contaId);
+        if(buscarConta.isEmpty()) {
+            throw new ContaNaoEncontradaException("CONTA NÃO ENCONTRADA!");
+        }
+        Conta conta = buscarConta.get();
+        List<Movimentacao> movimentacoes = movimentacaoRepository.findByContaOrderByDataHoraAsc(conta);
+        List<ExtratoResponseDTO> respostas = new ArrayList<>();
+
+        for(Movimentacao movimentacao : movimentacoes) {
+            ExtratoResponseDTO extrato = new ExtratoResponseDTO(
+                    movimentacao.getTipo(),
+                    movimentacao.getValor(),
+                    movimentacao.getDataHora()
+            );
+            respostas.add(extrato);
+        }
+
+        return respostas;
+
+    }
+
 }
