@@ -4,6 +4,7 @@ import com.ramaldes.newpay.dto.*;
 import com.ramaldes.newpay.model.Conta;
 import com.ramaldes.newpay.service.ContaService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,8 +27,8 @@ public class ContaController {
     }
 
     @GetMapping("/contas/{contaId}/extrato")
-    public List<ExtratoResponseDTO> extrato(@PathVariable Long contaId) {
-        return contaService.extrato(contaId);
+    public Page<ExtratoResponseDTO> extrato(@PathVariable Long contaId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return contaService.extrato(contaId, page, size);
     }
 
     @PostMapping("/contas/{clienteId}")
@@ -49,5 +50,7 @@ public class ContaController {
     public TransferenciaResponseDTO transferencia(@Valid @RequestBody TransferenciaRequestDTO dto) {
         return contaService.transferencia(dto);
     }
+
+
 
 }

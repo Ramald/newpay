@@ -9,8 +9,12 @@ import com.ramaldes.newpay.model.TipoOperacao;
 import com.ramaldes.newpay.repository.ClienteRepository;
 import com.ramaldes.newpay.repository.ContaRepository;
 import com.ramaldes.newpay.repository.MovimentacaoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -219,26 +223,21 @@ public class ContaService {
 
     }
 
-    public List<ExtratoResponseDTO> extrato(Long contaId) {
+    public Page<ExtratoResponseDTO> extrato(Long contaId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         Optional<Conta> buscarConta = contaRepository.findById(contaId);
         if(buscarConta.isEmpty()) {
             throw new ContaNaoEncontradaException("CONTA NÃO ENCONTRADA!");
         }
         Conta conta = buscarConta.get();
-        List<Movimentacao> movimentacoes = movimentacaoRepository.findByContaOrderByDataHoraAsc(conta);
-        List<ExtratoResponseDTO> respostas = new ArrayList<>();
-
-        for(Movimentacao movimentacao : movimentacoes) {
-            ExtratoResponseDTO extrato = new ExtratoResponseDTO(
-                    movimentacao.getTipo(),
-                    movimentacao.getValor(),
-                    movimentacao.getDataHora()
-            );
-            respostas.add(extrato);
-        }
+        Page<Movimentacao> movimentacoes = movimentacaoRepository.findByContaOrderByDataHoraAsc(conta, pageable);
+        Page<ExtratoResponseDTO> respostas = movimentacoes.map(movimentacao -> new ExtratoResponseDTO(
+                movimentacao.getTipo(),
+                movimentacao.getValor(),
+                movimentacao.getDataHora()
+        ));
 
         return respostas;
-
-    }
+        }
 
 }
