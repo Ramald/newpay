@@ -44,6 +44,69 @@ public class ContaServiceTest {
     @InjectMocks
     ContaService contaService;
 
+    // =====================
+    // DEPÓSITO
+    // =====================
+    @Test
+    void deveLancarExceptionQuandoDepositoComContaNaoEncontrada() {
+        DepositoRequestDTO dto = new DepositoRequestDTO(new BigDecimal("100.00"));
+
+        when(contaRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ContaNaoEncontradaException.class,
+                () -> contaService.depositar(1L, dto)
+        );
+    }
+
+    @Test
+    void deveSomarValorAoSaldoQuandoDepositado() {
+        Conta conta = new Conta("NP-100", new BigDecimal("200.00"));
+
+        Cliente cliente = new Cliente("Teste", "12345678900", "teste@email.com", LocalDate.of(2000, 1, 1));
+
+        conta.setCliente(cliente);
+
+        DepositoRequestDTO dto = new DepositoRequestDTO(new BigDecimal("50.00"));
+
+        when(contaRepository.findById(1L)).thenReturn(Optional.of(conta));
+        when(contaRepository.save(conta)).thenReturn(conta);
+
+        ContaResponseDTO resultado = contaService.depositar(1L, dto);
+
+        assertEquals(new BigDecimal("250.00"), resultado.getSaldo());
+
+        ArgumentCaptor<Movimentacao> captor = ArgumentCaptor.forClass(Movimentacao.class);
+
+        verify(movimentacaoRepository).save(captor.capture());
+        Movimentacao movimentacaoSalva = captor.getValue();
+
+        assertEquals(new BigDecimal("50.00"), movimentacaoSalva.getValor());
+        assertEquals(TipoOperacao.DEPOSITO, movimentacaoSalva.getTipo());
+    }
+
+    @Test
+    void deveDepositarValorNaConta() {
+        //GIVEN
+        Conta conta = new Conta("NP-1", new BigDecimal("500.00"));
+        DepositoRequestDTO dto = new DepositoRequestDTO(new BigDecimal("100.00"));
+
+        Cliente cliente = new Cliente("nome", "12130130103", "email@email.com", LocalDate.of(2000, 01, 01));
+
+        conta.setCliente(cliente);
+
+
+        when(contaRepository.findById(1L)).thenReturn(Optional.of(conta));
+        when(contaRepository.save(conta)).thenReturn(conta);
+
+        ContaResponseDTO resultado = contaService.depositar(1L, dto);
+
+        assertEquals(new BigDecimal("600.00"), resultado.getSaldo());
+    }
+
+    // =====================
+    // SAQUE
+    // =====================
     @Test
     void deveSacar100DeUmaContaComSaldo500() {
 
@@ -74,6 +137,62 @@ public class ContaServiceTest {
         assertThrows(SaldoInsuficienteException.class, () -> contaService.sacar(1L, dto));
     }
 
+    @Test
+    void deveDiminuirSaldoQuandoSacarValorValido() {
+        //GIVEN
+        Conta conta = new Conta("NP-100", new BigDecimal("500.00"));
+        Cliente cliente = new Cliente("nome", "12130130103", "email@email.com", LocalDate.of(2000, 1, 1));
+        conta.setCliente(cliente);
+        SaqueRequestDTO dto = new SaqueRequestDTO(
+                new BigDecimal("100.00")
+        );
+
+        when(contaRepository.findById(1L))
+                .thenReturn(Optional.of(conta));
+        when(contaRepository.save(conta))
+                .thenReturn(conta);
+
+        //WHEN
+        ContaResponseDTO resultado = contaService.sacar(1L, dto);
+
+        //THEN
+        assertEquals(new BigDecimal("400.00"), resultado.getSaldo());
+    }
+
+
+    @Test
+    void deveLancarExceptionQuandoSaldoInsuficiente() {
+        //GIVEN
+        Conta conta = new Conta("NP-100", new BigDecimal("100.00"));
+        SaqueRequestDTO dto = new SaqueRequestDTO(
+                new BigDecimal("150.00")
+        );
+
+        when(contaRepository.findById(1L))
+                .thenReturn(Optional.of(conta));
+        //WHEN/THEN
+        assertThrows(SaldoInsuficienteException.class,
+                () -> contaService.sacar(1L, dto)
+        );
+    }
+
+    @Test
+    void deveLancarExceptionQuandoContaNaoEncontrada() {
+
+        SaqueRequestDTO dto = new SaqueRequestDTO(new BigDecimal("100.00"));
+        when(contaRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ContaNaoEncontradaException.class,
+                () -> contaService.sacar(1L, dto));
+
+    }
+
+
+
+    // =====================
+    // TRANSFERÊNCIA
+    // =====================
     @Test
     void deveTransferirSaldoOrigemParaDestino() {
         Conta contaOrigem = new Conta("NP-1", new BigDecimal("500.00"));
@@ -139,123 +258,6 @@ public class ContaServiceTest {
     }
 
     @Test
-    void deveSomarValorAoSaldoQuandoDepositado() {
-        Conta conta = new Conta("NP-100", new BigDecimal("200.00"));
-
-        Cliente cliente = new Cliente("Teste", "12345678900", "teste@email.com", LocalDate.of(2000, 1, 1));
-
-        conta.setCliente(cliente);
-
-        DepositoRequestDTO dto = new DepositoRequestDTO(new BigDecimal("50.00"));
-
-        when(contaRepository.findById(1L)).thenReturn(Optional.of(conta));
-        when(contaRepository.save(conta)).thenReturn(conta);
-
-        ContaResponseDTO resultado = contaService.depositar(1L, dto);
-
-        assertEquals(new BigDecimal("250.00"), resultado.getSaldo());
-
-        ArgumentCaptor<Movimentacao> captor = ArgumentCaptor.forClass(Movimentacao.class);
-
-        verify(movimentacaoRepository).save(captor.capture());
-        Movimentacao movimentacaoSalva = captor.getValue();
-
-        assertEquals(new BigDecimal("50.00"), movimentacaoSalva.getValor());
-        assertEquals(TipoOperacao.DEPOSITO, movimentacaoSalva.getTipo());
-    }
-
-    @Test
-    void deveDepositarValorNaConta() {
-        //GIVEN
-        Conta conta = new Conta("NP-1", new BigDecimal("500.00"));
-        DepositoRequestDTO dto = new DepositoRequestDTO(new BigDecimal("100.00"));
-
-        Cliente cliente = new Cliente("nome", "12130130103", "email@email.com", LocalDate.of(2000, 01, 01));
-
-        conta.setCliente(cliente);
-
-
-        when(contaRepository.findById(1L)).thenReturn(Optional.of(conta));
-        when(contaRepository.save(conta)).thenReturn(conta);
-
-        ContaResponseDTO resultado = contaService.depositar(1L, dto);
-
-        assertEquals(new BigDecimal("600.00"), resultado.getSaldo());
-    }
-
-
-
-    // Método: sacar(Long contaId, SaqueRequestDTO dto)
-    // Entra: contaId + SaqueRequestDTO
-    // Sai: ContaResponseDTO
-    @Test
-    void deveDiminuirSaldoQuandoSacarValorValido() {
-        //GIVEN
-        Conta conta = new Conta("NP-100", new BigDecimal("500.00"));
-        Cliente cliente = new Cliente("nome", "12130130103", "email@email.com", LocalDate.of(2000, 1, 1));
-        conta.setCliente(cliente);
-        SaqueRequestDTO dto = new SaqueRequestDTO(
-                new BigDecimal("100.00")
-        );
-
-        when(contaRepository.findById(1L))
-                .thenReturn(Optional.of(conta));
-        when(contaRepository.save(conta))
-                .thenReturn(conta);
-
-        //WHEN
-        ContaResponseDTO resultado = contaService.sacar(1L, dto);
-
-        //THEN
-        assertEquals(new BigDecimal("400.00"), resultado.getSaldo());
-    }
-
-
-    // Método: sacar(Long contaId, SaqueRequestDTO dto)
-    // Entra: contaId + SaqueRequestDTO
-    // Sai: ContaResponseDTO se der certo
-    // Mas neste teste esperamos exception
-    @Test
-    void deveLancarExceptionQuandoSaldoInsuficiente() {
-        //GIVEN
-        Conta conta = new Conta("NP-100", new BigDecimal("100.00"));
-        SaqueRequestDTO dto = new SaqueRequestDTO(
-                new BigDecimal("150.00")
-        );
-
-        when(contaRepository.findById(1L))
-                .thenReturn(Optional.of(conta));
-        //WHEN/THEN
-        assertThrows(SaldoInsuficienteException.class,
-                () -> contaService.sacar(1L, dto)
-                );
-    }
-
-    @Test
-    void deveLancarExceptionQuandoContaNaoEncontrada(){
-
-        SaqueRequestDTO dto = new SaqueRequestDTO(new BigDecimal("100.00"));
-        when(contaRepository.findById(1L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(ContaNaoEncontradaException.class,
-                () -> contaService.sacar(1L, dto));
-
-    }
-
-    @Test
-    void deveLancarExceptionQuandoDepositoComContaNaoEncontrada() {
-        DepositoRequestDTO dto = new DepositoRequestDTO(new BigDecimal("100.00"));
-
-        when(contaRepository.findById(1L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(ContaNaoEncontradaException.class,
-                () -> contaService.depositar(1L, dto)
-                );
-    }
-
-    @Test
     void deveVerificarSeSaveFoiChamadoDuasVezes() {
 
         Conta contaOrigem = new Conta(
@@ -294,11 +296,11 @@ public class ContaServiceTest {
         assertEquals(
                 TipoOperacao.TRANSFERENCIA_SAIDA,
                 movimentacaosCapturadas.get(0).getTipo()
-                );
+        );
         assertEquals(
                 TipoOperacao.TRANSFERENCIA_ENTRADA,
                 movimentacaosCapturadas.get(1).getTipo()
-                );
+        );
     }
 
 }

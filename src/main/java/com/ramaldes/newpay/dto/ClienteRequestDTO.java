@@ -22,6 +22,16 @@ public class ClienteRequestDTO {
     @NotNull
     private LocalDate dataNascimento;
 
+    public ClienteRequestDTO() {
+    }
+
+    public ClienteRequestDTO(String nome, String cpf, String email, LocalDate dataNascimento) {
+        this.nome = nome;
+        this.cpf = cpf;
+        this.email = email;
+        this.dataNascimento = dataNascimento;
+    }
+
     public String getNome(){
         return nome;
     }
