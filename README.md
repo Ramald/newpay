@@ -81,30 +81,26 @@ Banco de dados
 
 Crie um banco chamado:
 
+```text
 newpay_db
-
+```
 Configure as variáveis de ambiente:
-
+```text
 DB_URL=jdbc:postgresql://localhost:5432/newpay_db
 DB_USERNAME=postgres
 DB_PASSWORD=sua_senha
-
+```
 Depois execute a aplicação Spring Boot.
 
-# Endpoints principais
-Clientes
-POST /v1/clientes
-GET /v1/clientes
-GET /v1/clientes/{id}
-PUT /v1/clientes/{id}
-DELETE /v1/clientes/{id}
-Contas
-POST /v1/contas/{clienteId}
-GET /v1/contas
-POST /v1/contas/{contaId}/depositos
-POST /v1/contas/{contaId}/saques
-POST /v1/contas/transferencias
-GET /v1/contas/{contaId}/extrato?page=0&size=10
+## Documentação da API
+
+A API possui documentação com Swagger/OpenAPI.
+
+Com a aplicação rodando localmente, acesse:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
 Testes
 
 O projeto possui testes unitários para validar regras de negócio dos serviços de clientes e contas.
@@ -119,8 +115,9 @@ Verificação de chamadas
 ArgumentCaptor
 
 Para executar os testes:
-
+```text
 mvn test
+```
 Front-end demonstrativo
 
 Este projeto possui uma interface front-end simples criada apenas para consumir a API REST e demonstrar as funcionalidades do back-end.
@@ -140,7 +137,6 @@ Front-end demonstrativo consumindo a API localmente
 
 # Próximas melhorias planejadas:
 
-Documentação com Swagger/OpenAPI
 Autenticação com Spring Security e JWT
 Testes de integração
 Docker
